@@ -51,4 +51,20 @@ export const content = {
     { label: 'LinkedIn', href: 'https://linkedin.com/in/yourname' },
     { label: 'Email', href: 'mailto:you@email.com' },
   ],
+  // Villagers on the planet. `{name}` is replaced with your name. Remove an entry to remove that NPC.
+  villagers: [
+    { id: 'sage', name: 'SAGE', lines: ['The world is round, so you can never get lost.', 'Keep walking and you will come back home, at dawn.'] },
+    { id: 'baker', name: 'BAKER', lines: ['Morning! Bread is still warm.', "{name} automated my whole order book once. Haven't burnt a loaf since."] },
+    { id: 'kid', name: 'PIP', lines: ['Did you see the crystals glowing up ahead?', 'I want to build games like {name} when I grow up!'] },
+    { id: 'cat', name: 'CAT', lines: ['Mrrp.', '(The cat seems to approve of your portfolio.)'] },
+    { id: 'farmer', name: 'FARMER', lines: ['The windmill never stops. Neither does {name}, I hear.', 'The runestones past the fields hold the big quests.'] },
+    { id: 'bard', name: 'BARD', lines: ['A song for the traveler:', '"React by day, Python by night, {name} ships it and gets it right!"'] },
+    { id: 'traveler', name: 'TRAVELER', lines: ['I walked this world twice today.', 'Tip: press T and let your feet do the walking.'] },
+    { id: 'knight', name: 'GATE GUARD', lines: ['Halt! ...Just kidding. Welcome to Duskhaven.', "The lighthouse past the town keeps {name}'s career records."] },
+    { id: 'mayor', name: 'MAYOR', lines: ['Duskhaven welcomes you!', 'Our town board says {name} is open to new quests. Hire them before the next town does.'] },
+    { id: 'merchant', name: 'MERCHANT', lines: ['Finest wares under the sunset!', 'Want to send {name} a message? The campfire is just past the lighthouse.'] },
+    { id: 'kid2', name: 'MEI', lines: ['Shh, the stars are coming out.', 'If you stay up late you can see the aurora!'] },
+    { id: 'stargazer', name: 'STARGAZER', lines: ['Look up. Two moons tonight.', 'Every shooting star is a deploy that went green.'] },
+    { id: 'wanderer', name: 'WANDERER', lines: ['These ruins are older than the sun.', 'Dawn is close. Home is just ahead.'] },
+  ],
 };

@@ -34,6 +34,21 @@ The HUD shows the time of day. All keyframes live in [`src/planet/timeofday.js`]
 | Lighthouse | Career |
 | Campfire + mailbox | Contact |
 
+Between the stops are villages and towns, each named in the HUD when you walk through:
+
+| Place | Around | What's there |
+| --- | --- | --- |
+| Dawnvale | after home (dawn) | cottages, a well, the baker, Pip and a cat |
+| Millbrook | before the quests (morning) | windmill, fields, haystacks, scarecrow, farmer |
+| Roadside | between the runestones | the bard and a wandering traveler's camp |
+| Duskhaven | before the lighthouse (dusk) | town gate and guard, townhouses, clock tower, market stalls, mayor, merchant |
+| Lanternreach | after the lighthouse (night) | paper lanterns, a telescope and the stargazer |
+| Old Ruins | before dawn | broken columns and the wanderer |
+
+Villagers' dialogue lives in `content.villagers`; remove an entry to remove that NPC.
+
+**Auto tour:** press **T**, the HUD button, or **AUTO TOUR** on the title screen. It walks the loop by itself and pauses a few seconds at every portfolio stop. Pressing a direction takes back control.
+
 The ring in the top-right is a minimap of the planet. The label at the top shows the current or next stop.
 
 ## Controls
@@ -41,7 +56,8 @@ The ring in the top-right is a minimap of the planet. The label at the top shows
 | Key | Action |
 | --- | --- |
 | A / D or ← / → | Walk (turns the planet) |
-| E / Enter / Space | Interact, advance dialog |
+| E / Enter / Space | Interact, talk, advance dialog |
+| T | Toggle auto tour |
 | Q | Quick View (plain portfolio) |
 | Esc | Settings (graphics quality) |
 
@@ -56,7 +72,9 @@ All text lives in [`src/content.js`](src/content.js).
 | File | What it does |
 | --- | --- |
 | `src/main.js` | Game loop, camera, moonlight, input, planet rotation, HUD |
-| `src/planet/planet.js` | The disc world, rim scenery and the 7 stops |
+| `src/planet/planet.js` | The disc world, rim scenery and the portfolio stops |
+| `src/planet/settlements.js` | Villages, towns and where each villager lives |
+| `src/planet/folk.js` | Villager pixel sprites (auto-outlined) and the cat |
 | `src/planet/timeofday.js` | Day/night keyframes (colors, light, glow) sampled from walking distance |
 | `src/planet/sky.js` | Pixel sky gradient, sun, moons, clouds, stars, aurora, shooting stars |
 | `src/planet/backdrop.js` | Parallax fantasy landscape (mountains, castle, floating islands, glowing tree, mist) |

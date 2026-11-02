@@ -150,6 +150,12 @@ export function openContact(c) {
 }
 
 // ---------- HUD: section label + ring minimap of the planet
+export function setAuto(on) {
+  const b = $('#btn-auto');
+  b.textContent = on ? 'AUTO TOUR: ON' : 'AUTO TOUR: OFF';
+  b.setAttribute('aria-pressed', on);
+  b.classList.toggle('on', on);
+}
 export function setClock(text) {
   const el = $('#clock');
   if (el && el.textContent !== text) el.textContent = text;

@@ -21,6 +21,7 @@
         <p class="class-line">CLASS: <span data-role></span> · LVL <span data-level></span></p>
         <div class="menu">
           <button class="px-btn primary" id="btn-start">▶ START GAME</button>
+          <button class="px-btn ghost" id="btn-tour">&gt;&gt; AUTO TOUR</button>
           <button class="px-btn ghost" id="btn-quick">&gt; QUICK VIEW</button>
           <button class="px-btn ghost" id="btn-settings">* SETTINGS</button>
         </div>
@@ -28,7 +29,7 @@
       </div>
       <p class="press blink">— PRESS ENTER —</p>
       <p class="corner bl">© 2026 <span data-name></span></p>
-      <p class="corner tr">A/D MOVE · E INTERACT · ESC MENU</p>
+      <p class="corner tr">A/D MOVE · E INTERACT · T AUTO TOUR · ESC MENU</p>
     </section>
 
     <!-- HUD -->
@@ -37,7 +38,8 @@
         <div><span data-name></span></div>
         <div class="small"><span data-role></span> · LVL <span data-level></span></div>
         <div id="clock" class="clock" aria-label="Time of day"></div>
-        <div class="small">ESC MENU · Q QUICK VIEW</div>
+        <button id="btn-auto" class="hud-btn" aria-pressed="false">AUTO TOUR: OFF</button>
+        <div class="small">T AUTO · ESC MENU · Q QUICK VIEW</div>
       </div>
       <div id="section" class="section-label" aria-live="polite"></div>
       <div class="hud-panel right ring-panel">

@@ -4,7 +4,8 @@
 import * as THREE from 'three';
 import { createKit } from '../env/kit.js';
 import { PixelSprite } from '../sprite.js';
-import { RUNESTONE, MAILBOX, WIZARD_IDLE, tileTexture, pixelTexture } from '../pixel.js';
+import { RUNESTONE, MAILBOX, tileTexture, pixelTexture } from '../pixel.js';
+import { buildSettlements } from './settlements.js';
 
 export const R = 36;
 const DEPTH = 12;
@@ -116,13 +117,6 @@ export function createPlanet(scene, quality, rand, content) {
     station({ kind: 'about', deg: 10, label: 'HOME · ABOUT', color: '#ffb85a', holder: k.group, anchor: new THREE.Vector3(0, 6.2, 1.4) });
   }
 
-  // ---------- guide NPC
-  {
-    const h = place(22, -0.3);
-    sprite(h, { frames: WIZARD_IDLE, scale: 1.25, fps: 4, glowChars: 'CY', glow: 2, recolor: { X: '#2a3a7a', x: '#1a2450' } });
-    station({ kind: 'npc', deg: 22, label: 'SAGE', color: '#9ad8ff', holder: h, anchor: new THREE.Vector3(0, 3.0, 0) });
-  }
-
   // ---------- 2. SKILLS: crystal shrine
   {
     const k = kitAt(61, -0.6);
@@ -228,8 +222,12 @@ export function createPlanet(scene, quality, rand, content) {
     station({ kind: 'contact', deg: 316, label: 'CAMPFIRE · CONTACT', color: '#ff9a4a', holder: k.group, anchor: new THREE.Vector3(0.8, 3.6, 0.6) });
   }
 
+  // ---------- villages, towns and villagers
+  const towns = buildSettlements({ kitAt, place, sprite, rand, content, station });
+
   // ---------- scenery between the stops
-  const near = (deg, pad) => stations.some((s) => Math.abs(wrap180(s.deg - deg)) < pad);
+  const inTown = (deg) => towns.spans.some((t) => wrap180(deg - t.from) >= -2 && wrap180(deg - t.to) <= 2);
+  const near = (deg, pad) => inTown(deg) || stations.some((s) => Math.abs(wrap180(s.deg - deg)) < pad);
   const shroomCols = ['#4ae0ff', '#ff6ad8', '#7affc8'];
   for (let deg = 0; deg < 360; deg += 2.5 + rand() * 4) {
     // back row: trees
@@ -316,12 +314,16 @@ export function createPlanet(scene, quality, rand, content) {
     /** rotation in degrees: positive = walked to the right */
     setRotation(deg) { planet.rotation.z = deg * DEG; },
     nearest(rotDeg, maxDeg = 4.5) {
-      let best = null, bd = maxDeg;
+      let best = null, bd = Infinity;
       for (const s of stations) {
         const d = Math.abs(wrap180(s.deg - rotDeg));
-        if (d < bd) { bd = d; best = s; }
+        if (d < (s.radius ?? maxDeg) && d < bd) { bd = d; best = s; }
       }
       return best;
+    },
+    /** Name of the village/town you're standing in, if any. */
+    placeAt(rotDeg) {
+      return towns.spans.find((t) => wrap180(rotDeg - t.from) >= 0 && wrap180(rotDeg - t.to) <= 0)?.name || null;
     },
     anchorWorld(s) { return s.holder.localToWorld(tmp.copy(s.anchor)); },
     /** n: 0 = day, 1 = night */
@@ -332,6 +334,7 @@ export function createPlanet(scene, quality, rand, content) {
     },
     update(t, dt) {
       for (const a of animated) a(t);
+      towns.update(t);
       for (const s of sprites) s.update(dt);
       flowerMat.opacity = (0.75 + 0.25 * Math.sin(t * 2)) * (0.35 + 0.65 * glowK.v);
     },

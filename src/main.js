@@ -20,6 +20,8 @@ ui.fillStatic(content);
 const SILHOUETTE = { K: '#7486e0', H: '#07060f', h: '#0a0916', S: '#0a0916', J: '#07060f', j: '#05040c', P: '#07060f', B: '#05040c', W: '#9ad8ff', V: '#7ac8ff' };
 
 const SPEED = 5;   // world units per second along the rim
+const AUTO_SPEED = 3.2; // auto tour walks a little slower
+const AUTO_PAUSE = 3.5; // seconds the auto tour stops at each portfolio stop
 const ACCEL = 20;
 
 function webglAvailable() {
@@ -106,20 +108,26 @@ async function boot() {
   let nearest = null;
   const dialog = ui.createDialog();
 
-  const startGame = () => {
+  // Auto tour: walks the loop by itself and pauses at each portfolio stop.
+  let auto = false, autoPause = 0, autoSeen = null;
+  const setAuto = (v) => { auto = v; autoPause = 0; autoSeen = null; ui.setAuto(v); };
+
+  const startGame = (withAuto = false) => {
     if (state !== 'title') return;
     $('#title').hidden = true;
     $('#hud').hidden = false;
     if (matchMedia('(pointer: coarse)').matches) $('#touch').hidden = false;
+    if (withAuto) { state = 'play'; setAuto(true); return; }
     state = 'dialog';
     dialog.show('SAGE', [
       `Welcome, traveler. This little world belongs to ${content.name}.`,
       'Walk with A/D or the arrow keys. The world turns beneath your feet.',
       'Every light on the horizon is a chapter of their story. Press E when you reach one.',
+      'Tired feet? Press T for the auto tour.',
     ], () => { state = 'play'; });
   };
 
-  const talk = (lines) => { state = 'dialog'; dialog.show('SAGE', lines, () => { state = 'play'; }); };
+  const talk = (lines, who = 'SAGE') => { state = 'dialog'; dialog.show(who, lines, () => { state = 'play'; }); };
 
   const interact = () => {
     if (ui.anyOverlayOpen()) return;
@@ -132,14 +140,14 @@ async function boot() {
       case 'project': ui.openProject(content.projects[nearest.index], nearest.index, ['#c07bff', '#2ac4b0', '#f0c04a']); break;
       case 'career': ui.openCareer(content); break;
       case 'contact': ui.openContact(content); break;
-      case 'npc': talk(['The world is round, so you can never get lost.', 'Keep walking and you will come back home.']); break;
+      case 'npc': talk(nearest.lines, nearest.name); break;
     }
   };
 
   // ---------- Input
   const keys = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right' };
   addEventListener('keydown', (e) => {
-    if (keys[e.key]) { input[keys[e.key]] = true; return; }
+    if (keys[e.key]) { input[keys[e.key]] = true; if (auto) setAuto(false); return; }
     if (e.key === 'Escape') {
       if (ui.closeOverlay('#modal') || ui.closeOverlay('#quick') || ui.closeOverlay('#menu')) return;
       ui.openMenu(quality.name);
@@ -148,13 +156,16 @@ async function boot() {
     if (ui.anyOverlayOpen()) return;
     if (['e', 'E', 'Enter', ' '].includes(e.key)) { e.preventDefault(); interact(); }
     if ((e.key === 'q' || e.key === 'Q') && state !== 'title') ui.openQuick(content);
+    if ((e.key === 't' || e.key === 'T') && state !== 'title') setAuto(!auto);
   });
   addEventListener('keyup', (e) => { if (keys[e.key]) input[keys[e.key]] = false; });
   addEventListener('blur', () => { input.left = input.right = false; });
 
-  $('#btn-start').addEventListener('click', startGame);
+  $('#btn-start').addEventListener('click', () => startGame());
   $('#btn-quick').addEventListener('click', () => ui.openQuick(content));
   $('#btn-settings').addEventListener('click', () => ui.openMenu(quality.name));
+  $('#btn-tour').addEventListener('click', () => startGame(true));
+  $('#btn-auto').addEventListener('click', (e) => { setAuto(!auto); e.currentTarget.blur(); });
   document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => ui.closeOverlay('#' + b.closest('.overlay').id)));
   document.querySelectorAll('.overlay').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o) ui.closeOverlay('#' + o.id); }));
   $('#menu').addEventListener('click', (e) => {
@@ -194,7 +205,14 @@ async function boot() {
     const canMove = state === 'play' && !ui.anyOverlayOpen();
     let dir = canMove ? (input.right ? 1 : 0) - (input.left ? 1 : 0) : 0;
     if (state === 'title') dir = 0;
-    const target = dir * SPEED;
+    if (canMove && auto) {
+      // `nearest` is from the previous frame: stop once at each portfolio stop, then carry on
+      if (nearest && nearest.kind !== 'npc' && nearest !== autoSeen) { autoSeen = nearest; autoPause = AUTO_PAUSE; }
+      if (!nearest) autoSeen = null;
+      autoPause -= dt;
+      dir = autoPause > 0 ? 0 : 1;
+    }
+    const target = dir * (auto ? AUTO_SPEED : SPEED);
     vel += Math.sign(target - vel) * Math.min(Math.abs(target - vel), ACCEL * dt);
     if (state === 'title') rot += dt * 3;                 // idle spin behind the title screen
     else rot += THREE.MathUtils.radToDeg((vel * dt) / R);
@@ -256,12 +274,13 @@ async function boot() {
       .map((s) => ({ s, d: wrap180(s.deg - rot) * (facing || 1) }))
       .filter((o) => o.d > -4.5)
       .sort((a, b) => a.d - b.d)[0];
-    ui.setSection(nearest && nearest.kind !== 'npc' ? nearest.label : ahead ? `NEXT: ${ahead.s.label}` : '');
+    const town = planet.placeAt(rot);
+    ui.setSection(nearest && nearest.kind !== 'npc' ? nearest.label : town ? `~ ${town} ~` : ahead ? `NEXT: ${ahead.s.label}` : '');
 
     post.composer.render(dt);
   });
 
-  window.__game = { scene, camera, planet, startGame, setRot: (d) => { rot = d; } };
+  window.__game = { scene, camera, planet, startGame, setRot: (d) => { rot = d; }, get rot() { return rot; }, get auto() { return auto; } };
 }
 
 boot();
