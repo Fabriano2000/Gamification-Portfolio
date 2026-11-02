@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>YOUR NAME — Player 1 Portfolio</title>
-    <meta name="description" content="Interactive HD-2D pixel RPG portfolio. Walk the neon city to explore projects, skills and contact info." />
+    <meta name="description" content="Interactive HD-2D portfolio: walk around a tiny fantasy planet under the night sky to explore projects, skills and contact info." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
@@ -34,14 +34,13 @@
     <!-- HUD -->
     <div id="hud" hidden>
       <div class="hud-panel left">
-        <div class="hearts"><i></i><i></i><i></i></div>
-        <div class="xp"><span>LV<span data-level></span></span><div class="bar"><b></b></div></div>
-        <div class="small">SHARDS x <span id="shards">00</span></div>
-      </div>
-      <div class="hud-panel right">
-        <div>ZONE 03/05 · <span id="zone-name">QUEST BOARD</span></div>
-        <div class="minimap"><i></i><i></i><i class="on"></i><i></i><i></i></div>
+        <div><span data-name></span></div>
+        <div class="small"><span data-role></span> · LVL <span data-level></span></div>
         <div class="small">ESC MENU · Q QUICK VIEW</div>
+      </div>
+      <div id="section" class="section-label" aria-live="polite"></div>
+      <div class="hud-panel right ring-panel">
+        <svg id="ring" viewBox="0 0 100 100" width="96" height="96" role="img" aria-label="Map of the planet"></svg>
       </div>
     </div>
 
@@ -51,7 +50,7 @@
 
     <!-- NPC dialog -->
     <div id="dialog" class="dialog" hidden role="dialog" aria-live="polite">
-      <div class="speaker">GUIDE-BOT</div>
+      <div class="speaker">SAGE</div>
       <p class="msg"></p>
       <div class="next blink">▼ [E] NEXT</div>
     </div>
@@ -78,8 +77,6 @@
         <h2 id="menu-title">SETTINGS</h2>
         <button class="px-btn primary" data-act="resume">▶ RESUME</button>
         <button class="px-btn ghost" data-act="quick">&gt; QUICK VIEW</button>
-        <div class="setting-label">ENVIRONMENT</div>
-        <div class="envs" role="group" aria-label="Environment"></div>
         <div class="quality">
           <span>GRAPHICS</span>
           <button data-q="low">LOW</button><button data-q="medium">MED</button><button data-q="high">HIGH</button>

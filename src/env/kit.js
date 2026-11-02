@@ -10,8 +10,9 @@ import { tileTexture, facadeTextures, signTexture, skyTexture, stripeTexture, pi
 export const STREET = { w: 96, d: 30, z: 6 }; // floor runs from z=-9 to z=+21 so it fills the bottom of the frame
 export const FACADE_Z = -7.6; // building centre; front face at about -6.1
 
-export function createKit(group, scene, quality, rand) {
-  const kit = { group, scene, quality, rand, lights: 0, animated: [], reflectors: [] };
+export function createKit(group, scene, quality, rand, budget = { n: 0 }) {
+  // `budget` can be shared between kits so several scenery groups respect one light limit.
+  const kit = { group, scene, quality, rand, budget, animated: [], reflectors: [] };
   const add = (o) => { group.add(o); return o; };
   kit.add = add;
 
@@ -27,15 +28,15 @@ export function createKit(group, scene, quality, rand) {
 
   // ---------- Lights
   kit.pointLight = (color, intensity, distance, x, y, z, decay = 1.6) => {
-    if (kit.lights >= quality.maxLights) return null;
-    kit.lights++;
+    if (budget.n >= quality.maxLights) return null;
+    budget.n++;
     const l = new THREE.PointLight(color, intensity, distance, decay);
     l.position.set(x, y, z);
     return add(l);
   };
   kit.spotLight = (color, intensity, x, y, z, tx, ty, tz, angle = 0.5) => {
-    if (kit.lights >= quality.maxLights) return null;
-    kit.lights++;
+    if (budget.n >= quality.maxLights) return null;
+    budget.n++;
     const s = new THREE.SpotLight(color, intensity, 22, angle, 0.5, 1.4);
     s.position.set(x, y, z);
     s.target.position.set(tx, ty, tz);

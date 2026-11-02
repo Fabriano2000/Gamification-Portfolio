@@ -6,12 +6,12 @@ import {
   NoiseEffect, ChromaticAberrationEffect, SMAAEffect, ToneMappingEffect, ToneMappingMode, BlendFunction,
 } from 'postprocessing';
 
-export function createPost(renderer, scene, camera, quality, focusTarget) {
+export function createPost(renderer, scene, camera, quality, focusTarget, { focusDistance = 30, focusRange = 9 } = {}) {
   const composer = new EffectComposer(renderer, { frameBufferType: THREE.HalfFloatType });
   composer.addPass(new RenderPass(scene, camera));
 
   if (quality.dof) {
-    const dof = new DepthOfFieldEffect(camera, { worldFocusDistance: 30, worldFocusRange: 9, bokehScale: 3, resolutionScale: 0.5 });
+    const dof = new DepthOfFieldEffect(camera, { worldFocusDistance: focusDistance, worldFocusRange: focusRange, bokehScale: 3, resolutionScale: 0.5 });
     dof.target = focusTarget; // keeps the player's depth in focus (tilt-shift look)
     composer.addPass(new EffectPass(camera, dof));
   }

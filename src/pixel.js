@@ -113,6 +113,10 @@ export const DESK = [[
   '.....KKKKKKKK.....', '........KK........', '......KKKKKK..KQK.', 'KKKKKKKKKKKKKKKKKK', 'KTTTTTTTTTTTTTTTTK',
   'KttttttttttttttttK', '.Kt............tK.', '.Kt............tK.', '.Kt............tK.', '.KK............KK.',
 ]];
+export const MAILBOX = [[
+  '..KKKKKKKK..', '.KJJJJJJJJK.', 'KJJWWWWWWJJK', 'KJJWKKKKWJJK', 'KJJWWWWWWJJK', 'KjjjjjjjjjjK',
+  'KKKKKKKKKKKK', '.....KK.....', '.....KK.....', '.....KK.....', '....KKKK....',
+]];
 export const SHARD = [['..KK..', '.KVVK.', 'KVWVVK', 'KVVVvK', '.KVvK.', '..KK..']];
 
 // ---------- Canvas helpers

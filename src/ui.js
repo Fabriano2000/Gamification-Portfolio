@@ -124,34 +124,47 @@ export function openQuick(c) {
     <div class="links">${c.contact.map((l) => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join('')}</div>`);
 }
 
-export function markMenu(quality, env) {
+export function openMenu(quality) {
   document.querySelectorAll('.quality button').forEach((b) => b.classList.toggle('on', b.dataset.q === quality));
-  document.querySelectorAll('.envs button').forEach((b) => {
-    const on = b.dataset.env === env;
-    b.classList.toggle('on', on);
-    b.setAttribute('aria-pressed', on);
-  });
-}
-export function openMenu(quality, env) {
-  markMenu(quality, env);
   openOverlay('#menu');
 }
 
-/** Environment picker buttons (one per theme). */
-export function buildEnvMenu(themes) {
-  $('.envs').innerHTML = themes.map((t) => `<button data-env="${t.id}" aria-pressed="false">${esc(t.label)}</button>`).join('');
+// ---------- Section panels (each stop on the planet opens one)
+const segs = (n) => Array.from({ length: 10 }, (_, k) => `<i class="${k < n ? 'on' : ''}"></i>`).join('');
+export function openAbout(c) {
+  openOverlay('#modal', `<div class="q">HOME · ABOUT</div><h2 id="modal-title">${esc(c.name)}</h2>
+    <p class="q">${esc(c.role)} · LVL ${esc(c.level)}</p><p>${esc(c.tagline)}</p><p>${esc(c.about)}</p>`);
+}
+export function openSkills(c) {
+  openOverlay('#modal', `<div class="q">CRYSTAL SHRINE</div><h2 id="modal-title">SKILLS</h2>
+    ${c.skills.map((s) => `<div class="skill"><b>${esc(s.name)}</b><div class="segs" aria-label="${s.level} of 10">${segs(s.level)}</div><small>${esc(s.tools)}</small></div>`).join('')}`);
+}
+export function openCareer(c) {
+  openOverlay('#modal', `<div class="q">LIGHTHOUSE</div><h2 id="modal-title">CAREER</h2>
+    ${c.career.map((j) => `<h3>${esc(j.year)}</h3><p><strong>${esc(j.role)}</strong> @ ${esc(j.company)}<br>${esc(j.note)}</p>`).join('')}`);
+}
+export function openContact(c) {
+  openOverlay('#modal', `<div class="q">CAMPFIRE</div><h2 id="modal-title">SEND A MESSAGE</h2>
+    <p>Pull up a log and say hi.</p>
+    <div class="links">${c.contact.map((l) => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join('')}</div>`);
 }
 
-/** UI colors + labels follow the environment. */
-export function applyTheme(theme) {
-  const root = document.documentElement;
-  for (const [k, v] of Object.entries(theme.ui)) root.style.setProperty(`--${k}`, v);
-  root.dataset.env = theme.id;
-  $('#zone-name').textContent = theme.zone;
-  $('#dialog .speaker').textContent = theme.npc.name;
+// ---------- HUD: section label + ring minimap of the planet
+export function setSection(text) {
+  const el = $('#section');
+  if (el.textContent !== text) el.textContent = text;
 }
-
-export function setShards(n, total) {
-  $('#shards').textContent = String(n).padStart(2, '0');
-  document.querySelector('.xp .bar b').style.width = `${65 + (35 * n) / total}%`;
+export function buildRing(stations) {
+  const svg = $('#ring');
+  const C = 50, Rr = 36;
+  const dots = stations.filter((s) => s.kind !== 'npc').map((s) => {
+    const a = (s.deg * Math.PI) / 180;
+    return `<rect x="${(C + Math.sin(a) * Rr - 3).toFixed(1)}" y="${(C - Math.cos(a) * Rr - 3).toFixed(1)}" width="6" height="6" fill="${s.color}"><title>${esc(s.label)}</title></rect>`;
+  }).join('');
+  svg.innerHTML = `<circle cx="${C}" cy="${C}" r="${Rr}" fill="none" stroke="currentColor" stroke-width="3" opacity=".35"/>
+    <g id="ring-dots">${dots}</g>
+    <path d="M${C - 5} ${C - Rr - 13} L${C + 5} ${C - Rr - 13} L${C} ${C - Rr - 5} Z" fill="#ffffff"/>`;
+}
+export function setRing(rotDeg) {
+  $('#ring-dots')?.setAttribute('transform', `rotate(${(-rotDeg).toFixed(2)} 50 50)`);
 }
