@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>YOUR NAME — Player 1 Portfolio</title>
+    <meta name="description" content="Interactive HD-2D pixel RPG portfolio. Walk the neon city to explore projects, skills and contact info." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="stage" aria-hidden="true"></div>
+
+    <!-- Title screen -->
+    <section id="title" class="screen">
+      <div class="title-ui">
+        <p class="tag">★ PLAYER 1 PORTFOLIO ★</p>
+        <h1 class="logo" data-name></h1>
+        <p class="class-line">CLASS: <span data-role></span> · LVL <span data-level></span></p>
+        <div class="menu">
+          <button class="px-btn primary" id="btn-start">▶ START GAME</button>
+          <button class="px-btn ghost" id="btn-quick">&gt; QUICK VIEW</button>
+        </div>
+        <p class="hint">Recruiter? Quick View skips the game -&gt; plain portfolio.</p>
+      </div>
+      <p class="press blink">— PRESS ENTER —</p>
+      <p class="corner bl">© 2026 <span data-name></span></p>
+      <p class="corner tr">A/D MOVE · E INTERACT · ESC MENU</p>
+    </section>
+
+    <!-- HUD -->
+    <div id="hud" hidden>
+      <div class="hud-panel left">
+        <div class="hearts"><i></i><i></i><i></i></div>
+        <div class="xp"><span>LV<span data-level></span></span><div class="bar"><b></b></div></div>
+        <div class="small">SHARDS x <span id="shards">00</span></div>
+      </div>
+      <div class="hud-panel right">
+        <div>ZONE 03/05 · QUEST BOARD</div>
+        <div class="minimap"><i></i><i></i><i class="on"></i><i></i><i></i></div>
+        <div class="small">ESC MENU · Q QUICK VIEW</div>
+      </div>
+    </div>
+
+    <!-- Floating world-space UI -->
+    <div id="card" class="quest-card" hidden></div>
+    <div id="prompt" class="prompt" hidden></div>
+
+    <!-- NPC dialog -->
+    <div id="dialog" class="dialog" hidden role="dialog" aria-live="polite">
+      <div class="speaker">GUIDE-BOT</div>
+      <p class="msg"></p>
+      <div class="next blink">▼ [E] NEXT</div>
+    </div>
+
+    <!-- Project modal -->
+    <div id="modal" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <article class="panel">
+        <button class="close" data-close aria-label="Close">X</button>
+        <div class="body"></div>
+      </article>
+    </div>
+
+    <!-- Quick view (plain portfolio) -->
+    <div id="quick" class="overlay" hidden role="dialog" aria-modal="true" aria-label="Quick view portfolio">
+      <article class="panel wide">
+        <button class="close" data-close aria-label="Close">X</button>
+        <div class="body"></div>
+      </article>
+    </div>
+
+    <!-- Pause menu -->
+    <div id="menu" class="overlay" hidden role="dialog" aria-modal="true" aria-label="Menu">
+      <article class="panel small-panel">
+        <h2>PAUSED</h2>
+        <button class="px-btn primary" data-act="resume">▶ RESUME</button>
+        <button class="px-btn ghost" data-act="quick">&gt; QUICK VIEW</button>
+        <div class="quality">
+          <span>GRAPHICS</span>
+          <button data-q="low">LOW</button><button data-q="medium">MED</button><button data-q="high">HIGH</button>
+        </div>
+        <p class="small">Changing graphics reloads the page.</p>
+      </article>
+    </div>
+
+    <!-- Touch controls -->
+    <div id="touch" hidden>
+      <button data-key="left" aria-label="Move left">◀</button>
+      <button data-key="right" aria-label="Move right">▶</button>
+      <button data-key="act" class="act" aria-label="Interact">E</button>
+    </div>
+
+    <noscript>This portfolio needs JavaScript. </noscript>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
