@@ -3,8 +3,34 @@
 import * as THREE from 'three';
 import { pixelTexture } from '../pixel.js';
 
-const basic = (color, opts = {}) => new THREE.MeshBasicMaterial({ color, ...opts });
-const glow = (color) => new THREE.MeshBasicMaterial({ color, fog: false });
+// Materials are shared per "role" and recolored every frame from the time of day,
+// so the painted landscape picks up dawn pinks, daylight haze and night blues.
+const roles = {};
+const role = (name) => (roles[name] ||= new THREE.MeshBasicMaterial({ color: '#000' }));
+const glows = [];
+const glow = (color, dayRole = 'house') => {
+  const m = new THREE.MeshBasicMaterial({ color, fog: false });
+  glows.push({ m, base: new THREE.Color(color), dayRole });
+  return m;
+};
+const C = (h) => new THREE.Color(h);
+const WHITE = C('#ffffff'), GREEN = C('#4a8a5a'), TREE = C('#2a5a3a'), PINE = C('#2a4a3a'), HILL = C('#3a6a4a');
+const tmp = new THREE.Color();
+function recolor(tod) {
+  const { hor, shade, night } = tod;
+  const mix = (name, a, b, f) => role(name).color.copy(a).lerp(b, f);
+  mix('farBack', hor, shade, 0.45);
+  mix('farFront', hor, shade, 0.58);
+  role('snow').color.copy(WHITE).lerp(hor, 0.35).multiplyScalar(1 - 0.4 * night);
+  mix('rock', hor, shade, 0.75);
+  mix('castle', hor, shade, 0.7);
+  mix('islandTop', GREEN, shade, 0.25 + 0.6 * night);
+  mix('islandTree', TREE, shade, 0.35 + 0.55 * night);
+  role('hill').color.copy(hor).lerp(HILL, 0.5 * (1 - night)).lerp(shade, 0.75);
+  mix('pine', PINE, shade, 0.6 + 0.35 * night);
+  mix('house', hor, shade, 0.85);
+  for (const g of glows) g.m.color.copy(tmp.copy(roles[g.dayRole].color)).lerp(g.base, night);
+}
 
 function shapeMesh(pts, mat) {
   return new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)))), mat);
@@ -59,43 +85,42 @@ export function createBackdrop(scene, rand) {
   // ---------- far: snowy mountain range lit by the moon
   addLayer(-150, -40, 420, 0.04, (g, W) => {
     const back = ridge(rand, W, -90, 14, 52, 22, 0.35);
-    g.add(shapeMesh(back.pts, basic('#141a40')));
+    g.add(shapeMesh(back.pts, role('farBack')));
     for (const [x, y] of back.tops) if (y > 34) {
       const s = 4 + rand() * 4;
-      const cap = shapeMesh([[x - s, y - s * 1.2], [x, y], [x + s * 0.9, y - s * 1.1], [x + s * 0.3, y - s * 0.7]], basic('#7c8cc8'));
+      const cap = shapeMesh([[x - s, y - s * 1.2], [x, y], [x + s * 0.9, y - s * 1.1], [x + s * 0.3, y - s * 0.7]], role('snow'));
       cap.position.z = 0.1; g.add(cap);
     }
     const front = ridge(rand, W, -90, 0, 12, 16, 0.25);
-    const fm = shapeMesh(front.pts, basic('#10143a')); fm.position.z = 2; g.add(fm);
+    const fm = shapeMesh(front.pts, role('farFront')); fm.position.z = 2; g.add(fm);
   });
 
   // ---------- mid: castle on a cliff, floating islands with waterfalls, a glowing tree
   const wfTex = waterfallTexture();
   animated.push((t) => { wfTex.offset.y = -t * 0.6; });
   addLayer(-105, -22, 300, 0.1, (g, W) => {
-    const rock = '#0e1232', dark = '#121640';
     // cliff + castle
     const cx = 70;
-    g.add(shapeMesh([[cx - 26, -80], [cx - 20, 6], [cx - 12, 14], [cx - 4, 16], [cx + 10, 15], [cx + 18, 8], [cx + 24, -80]], basic(rock)));
-    const castle = basic(dark);
+    g.add(shapeMesh([[cx - 26, -80], [cx - 20, 6], [cx - 12, 14], [cx - 4, 16], [cx + 10, 15], [cx + 18, 8], [cx + 24, -80]], role('rock')));
+    const castle = role('castle');
     const box = (w, h, x, y) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), castle); m.position.set(x, y, 0.2); g.add(m); };
     box(16, 10, cx, 21); box(4, 18, cx - 8, 25); box(4, 22, cx + 7, 27); box(3, 28, cx, 30);
     for (const [x, h] of [[cx - 8, 34], [cx + 7, 38], [cx, 44]]) {
       const spire = shapeMesh([[x - 2.6, h], [x, h + 7], [x + 2.6, h]], castle); spire.position.z = 0.2; g.add(spire);
-      const beacon = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), glow('#ff6a8a')); beacon.position.set(x, h + 7.4, 0.3); g.add(beacon);
+      const beacon = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), glow('#ff6a8a', 'castle')); beacon.position.set(x, h + 7.4, 0.3); g.add(beacon);
     }
     for (let i = 0; i < 14; i++) {
-      const w = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.3), glow(rand() < 0.8 ? '#ffd88a' : '#9ad8ff'));
+      const w = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.3), glow(rand() < 0.8 ? '#ffd88a' : '#9ad8ff', 'castle'));
       w.position.set(cx - 9 + Math.floor(rand() * 18), 18 + Math.floor(rand() * 16), 0.3); g.add(w);
     }
     // floating islands with waterfalls
     for (const [x, y, s] of [[-80, 44, 1.3], [-30, 54, 0.8], [130, 48, 1]]) {
       const isl = new THREE.Group();
-      isl.add(shapeMesh([[-10 * s, 0], [10 * s, 0], [6 * s, -5 * s], [1 * s, -16 * s], [-4 * s, -7 * s]], basic(rock)));
-      const top = shapeMesh([[-10.5 * s, 0], [10.5 * s, 0], [9 * s, 1.2 * s], [-9 * s, 1.2 * s]], basic('#1a2a4a')); top.position.z = 0.1; isl.add(top);
+      isl.add(shapeMesh([[-10 * s, 0], [10 * s, 0], [6 * s, -5 * s], [1 * s, -16 * s], [-4 * s, -7 * s]], role('rock')));
+      const top = shapeMesh([[-10.5 * s, 0], [10.5 * s, 0], [9 * s, 1.2 * s], [-9 * s, 1.2 * s]], role('islandTop')); top.position.z = 0.1; isl.add(top);
       for (let i = 0; i < 4; i++) {
         const tx = (-7 + i * 4.5 + rand()) * s, th = (3 + rand() * 4) * s;
-        const tree = shapeMesh([[tx - 1.4 * s, 1 * s], [tx, 1 * s + th], [tx + 1.4 * s, 1 * s]], basic('#0b1430')); tree.position.z = 0.2; isl.add(tree);
+        const tree = shapeMesh([[tx - 1.4 * s, 1 * s], [tx, 1 * s + th], [tx + 1.4 * s, 1 * s]], role('islandTree')); tree.position.z = 0.2; isl.add(tree);
       }
       const fall = new THREE.Mesh(new THREE.PlaneGeometry(1.4 * s, 60), new THREE.MeshBasicMaterial({ map: wfTex, transparent: true, opacity: 0.85, fog: false }));
       fall.position.set(5 * s, -30, 0.05); isl.add(fall);
@@ -106,10 +131,10 @@ export function createBackdrop(scene, rand) {
     }
     // glowing world tree
     const tx = -10;
-    g.add(shapeMesh([[tx - 2, -80], [tx - 1.2, 10], [tx - 6, 18], [tx - 0.5, 14], [tx, 22], [tx + 0.6, 14], [tx + 6, 19], [tx + 1.3, 10], [tx + 2, -80]], basic(rock)));
+    g.add(shapeMesh([[tx - 2, -80], [tx - 1.2, 10], [tx - 6, 18], [tx - 0.5, 14], [tx, 22], [tx + 0.6, 14], [tx + 6, 19], [tx + 1.3, 10], [tx + 2, -80]], role('rock')));
     for (let i = 0; i < 120; i++) {
       const a = rand() * Math.PI * 2, r = rand() * 13;
-      const leaf = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), glow(rand() < 0.6 ? '#b07bff' : '#6ae0ff'));
+      const leaf = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.8), glow(rand() < 0.6 ? '#b07bff' : '#6ae0ff', 'islandTree'));
       leaf.position.set(tx + Math.cos(a) * r * 1.3, 24 + Math.sin(a) * r * 0.7, 0.3); g.add(leaf);
     }
   });
@@ -117,33 +142,38 @@ export function createBackdrop(scene, rand) {
   // ---------- near: rolling hills, pines and a sleeping village
   addLayer(-62, -24, 200, 0.22, (g, W) => {
     const hills = ridge(rand, W, -60, 2, 8, 14, 0.05);
-    g.add(shapeMesh(hills.pts, basic('#0b0e28')));
+    g.add(shapeMesh(hills.pts, role('hill')));
     for (let x = 4; x < W - 4; x += 2.5 + rand() * 4) {
       const h = 3 + rand() * 4, y = 2 + rand() * 3;
-      const p = shapeMesh([[x - h * 0.3, y], [x, y + h], [x + h * 0.3, y]], basic('#080a20')); p.position.z = 0.5; g.add(p);
+      const p = shapeMesh([[x - h * 0.3, y], [x, y + h], [x + h * 0.3, y]], role('pine')); p.position.z = 0.5; g.add(p);
     }
     for (let i = 0; i < 6; i++) {
       const x = 120 + i * 4.5;
-      const house = shapeMesh([[x - 1.6, 4], [x - 1.6, 6.5], [x, 8.2], [x + 1.6, 6.5], [x + 1.6, 4]], basic('#0d1030')); house.position.z = 0.8; g.add(house);
-      const win = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), glow('#ffcf6b')); win.position.set(x, 5.6, 0.9); g.add(win);
+      const house = shapeMesh([[x - 1.6, 4], [x - 1.6, 6.5], [x, 8.2], [x + 1.6, 6.5], [x + 1.6, 4]], role('house')); house.position.z = 0.8; g.add(house);
+      const win = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), glow('#ffcf6b', 'house')); win.position.set(x, 5.6, 0.9); g.add(win);
     }
   });
 
   // glowing mist band right behind the planet's crown (makes the silhouette pop)
+  let mistMat;
   {
     const cv = document.createElement('canvas'); cv.width = 4; cv.height = 32;
     const c = cv.getContext('2d');
     for (let y = 0; y < 32; y++) {
       const a = Math.max(0, 1 - Math.abs(y - 18) / 14);
-      c.fillStyle = `rgba(120,130,255,${(a * a * 0.55).toFixed(3)})`; c.fillRect(0, y, 4, 1);
+      c.fillStyle = `rgba(255,255,255,${(a * a).toFixed(3)})`; c.fillRect(0, y, 4, 1);
     }
-    const mist = new THREE.Mesh(new THREE.PlaneGeometry(320, 22),
-      new THREE.MeshBasicMaterial({ map: pixelTexture(cv), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    mistMat = new THREE.MeshBasicMaterial({ map: pixelTexture(cv), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+    const mist = new THREE.Mesh(new THREE.PlaneGeometry(320, 22), mistMat);
     mist.position.set(0, -4, -30);
     root.add(mist);
   }
 
   return {
+    setTime(tod) {
+      recolor(tod);
+      mistMat.color.copy(tod.mist).multiplyScalar(tod.mistA);
+    },
     update(t, walked) {
       for (const a of animated) a(t);
       for (const { holder, W, factor } of layers) {

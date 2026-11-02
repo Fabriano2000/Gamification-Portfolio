@@ -11,7 +11,7 @@ const DEPTH = 12;
 const DEG = Math.PI / 180;
 export const wrap180 = (d) => ((((d + 180) % 360) + 360) % 360) - 180;
 
-const NIGHT_GRASS = { N: '#1d4a3c', u: '#0f2a24', C: '#c07bff', W: '#7ad8ff' };
+const GRASS = { N: '#3f8a4a', u: '#2a6a3a', C: '#c07bff', W: '#7ad8ff' };
 
 /** Pixel cross-section of the planet: strata, roots, glowing crystals and a warm core. */
 function earthTextures(rand) {
@@ -66,12 +66,13 @@ export function createPlanet(scene, quality, rand, content) {
   const sprites = [];
   const animated = [];
   const stations = [];
+  const glowK = { v: 1 }; // 0 = broad daylight, 1 = deep night
 
   // ---------- the disc
   const geo = new THREE.CylinderGeometry(R, R, DEPTH, 200, 1);
   geo.rotateX(Math.PI / 2); // top cap now faces the camera
   const earth = earthTextures(rand);
-  const sideMat = new THREE.MeshStandardMaterial({ map: tileTexture('grass', (2 * Math.PI * R) / 1.6, DEPTH / 1.6, NIGHT_GRASS), roughness: 1 });
+  const sideMat = new THREE.MeshStandardMaterial({ map: tileTexture('grass', (2 * Math.PI * R) / 1.6, DEPTH / 1.6, GRASS), roughness: 1 });
   const capMat = new THREE.MeshStandardMaterial({ map: earth.map, emissiveMap: earth.glow, emissive: '#ffffff', emissiveIntensity: 1.8, roughness: 1 });
   const disc = new THREE.Mesh(geo, [sideMat, capMat, capMat]);
   disc.receiveShadow = true;
@@ -96,7 +97,7 @@ export function createPlanet(scene, quality, rand, content) {
     return s;
   };
   const signpost = (k, text, x, z = 1.2) => {
-    k.box(0.14, 1.3, 0.14, k.mat({ color: '#2a1e18' }), x, 0.65, z);
+    k.box(0.14, 1.3, 0.14, k.mat({ color: '#5a4030' }), x, 0.65, z);
     k.sign(text, { style: 'wood', x, y: 1.35, z: z + 0.1, scale: 0.045, light: false });
   };
   const station = (s) => { stations.push(s); return s; };
@@ -104,13 +105,13 @@ export function createPlanet(scene, quality, rand, content) {
   // ---------- 1. HOME (about)
   {
     const k = kitAt(10, -1.4);
-    const wall = k.mat({ map: tileTexture('plaster_timber', 4.2 / 1.6, 3 / 1.6, { F: '#3a3456', l: '#2e2a48', t: '#120e1a' }) });
+    const wall = k.mat({ map: tileTexture('plaster_timber', 4.2 / 1.6, 3 / 1.6, { F: '#e8dcc4', l: '#c8b89c', t: '#4a3020' }) });
     k.box(4.2, 3, 3, wall, 0, 1.5, 0).castShadow = true;
-    k.gableRoof(0, 3, 0, 4.2, 3, { tile: 'roof_slate', height: 2, recolor: { s: '#0e0c18', a: '#1e1c30', A: '#34345a' } });
+    k.gableRoof(0, 3, 0, 4.2, 3, { tile: 'roof_red', height: 2 });
     k.box(0.9, 0.8, 0.06, k.glowMat('#ffc06a', 2.6), -1.1, 1.8, 1.52);
     k.box(0.9, 0.8, 0.06, k.glowMat('#ffc06a', 2.6), 1.1, 1.8, 1.52);
-    k.box(0.8, 1.5, 0.06, k.mat({ color: '#1a1020' }), 0, 0.75, 1.52);
-    k.lamp(2.7, 0.9, { color: '#ffb85a', h: 2.4, pole: '#1a1420' });
+    k.box(0.8, 1.5, 0.06, k.mat({ color: '#4a3020' }), 0, 0.75, 1.52);
+    k.lamp(2.7, 0.9, { color: '#ffb85a', h: 2.4, pole: '#2a2228' });
     signpost(k, 'HOME', -2.9);
     station({ kind: 'about', deg: 10, label: 'HOME · ABOUT', color: '#ffb85a', holder: k.group, anchor: new THREE.Vector3(0, 6.2, 1.4) });
   }
@@ -125,7 +126,7 @@ export function createPlanet(scene, quality, rand, content) {
   // ---------- 2. SKILLS: crystal shrine
   {
     const k = kitAt(61, -0.6);
-    k.box(3.4, 0.5, 2.2, k.mat({ map: tileTexture('stone_block', 2, 1, { A: '#3a3e5e', a: '#22243a', f: '#5a5e80', G: '#4a4e6e' }) }), 0, 0.25, 0);
+    k.box(3.4, 0.5, 2.2, k.mat({ map: tileTexture('stone_block', 2, 1) }), 0, 0.25, 0);
     const cols = ['#4ae0ff', '#c07bff', '#7affc8', '#ff6ad8', '#4ae0ff'];
     const crystals = new THREE.Group();
     [[-1, 1.6, 0.5], [-0.3, 2.6, 0.7], [0.5, 2.0, 0.55], [1.1, 1.3, 0.4], [0.1, 1.2, 0.35]].forEach(([x, h, r], i) => {
@@ -155,7 +156,7 @@ export function createPlanet(scene, quality, rand, content) {
     const k = kitAt(deg, -0.3);
     const s = sprite(k.group, {
       frames: RUNESTONE, scale: 1.6, glowChars: 'I', glow: 2.8,
-      recolor: { A: '#4a4e6e', a: '#2e3050', N: '#1d4a3c', u: '#0f2a24', I: runeCols[i] },
+      recolor: { N: '#3f8a4a', u: '#2a6a3a', I: runeCols[i] },
     });
     k.pointLight(runeCols[i], 6, 8, 0, 2, 1.2);
     const beam = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 1.6), new THREE.MeshBasicMaterial({ color: runeCols[i], transparent: true, opacity: 0.6, depthWrite: false }));
@@ -169,7 +170,7 @@ export function createPlanet(scene, quality, rand, content) {
   // ---------- 6. CAREER: lighthouse
   {
     const k = kitAt(265, -2.2);
-    const stripes = ['#3a3e60', '#7a80aa'];
+    const stripes = ['#c84a4a', '#f0ece4'];
     for (let i = 0; i < 4; i++) {
       const r0 = 1.3 - i * 0.1, r1 = 1.3 - (i + 1) * 0.1;
       const seg = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, 2, 10), k.flat(stripes[i % 2]));
@@ -177,7 +178,7 @@ export function createPlanet(scene, quality, rand, content) {
     }
     const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 1, 8), k.glowMat('#ffe6a0', 3));
     lamp.position.y = 8.5; k.add(lamp);
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(1.1, 1.2, 8), k.flat('#2a1e30'));
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(1.1, 1.2, 8), k.flat('#3a2a2a'));
     roof.position.y = 9.6; k.add(roof);
     k.pointLight('#ffe6a0', 8, 12, 0, 8.5, 1.5);
     const beamPivot = new THREE.Group(); beamPivot.position.y = 8.5; k.add(beamPivot);
@@ -185,7 +186,7 @@ export function createPlanet(scene, quality, rand, content) {
       new THREE.MeshBasicMaterial({ color: '#ffe6a0', transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
     cone.rotation.z = Math.PI / 2; cone.position.x = 12;
     beamPivot.add(cone);
-    k.onUpdate((t) => { beamPivot.rotation.y = t * 0.7; });
+    k.onUpdate((t) => { beamPivot.rotation.y = t * 0.7; cone.material.opacity = 0.1 * glowK.v; });
     signpost(k, 'CAREER', 2.4, 3.2);
     station({ kind: 'career', deg: 265, label: 'LIGHTHOUSE · CAREER', color: '#ffe6a0', holder: k.group, anchor: new THREE.Vector3(0, 11.5, 2.2) });
   }
@@ -196,7 +197,7 @@ export function createPlanet(scene, quality, rand, content) {
     for (const r of [0.6, -0.6]) { const log = k.box(1.6, 0.22, 0.22, k.flat('#3a2418'), 0, 0.15, 0); log.rotation.y = r; }
     for (let i = 0; i < 8; i++) {
       const a = (i / 8) * Math.PI * 2;
-      const st = new THREE.Mesh(new THREE.IcosahedronGeometry(0.2, 0), k.flat('#3a3e5e'));
+      const st = new THREE.Mesh(new THREE.IcosahedronGeometry(0.2, 0), k.flat('#7a7e90'));
       st.position.set(Math.cos(a) * 0.95, 0.12, Math.sin(a) * 0.6); k.add(st);
     }
     const flames = ['#ff5a1a', '#ff9a2a', '#ffe06a'].map((c, i) => {
@@ -206,7 +207,7 @@ export function createPlanet(scene, quality, rand, content) {
     const fire = k.pointLight('#ff8a3a', 9, 10, 0, 1.2, 0.8);
     k.onUpdate((t) => {
       flames.forEach((f, i) => { f.scale.set(1 + Math.sin(t * 9 + i) * 0.08, 1 + Math.sin(t * 13 + i * 2) * 0.18, 1); f.rotation.y = t * (1 + i); });
-      if (fire) fire.intensity = 8 + Math.sin(t * 11) * 1.5 + Math.sin(t * 23) * 1;
+      if (fire) fire.intensity = (8 + Math.sin(t * 11) * 1.5 + Math.sin(t * 23) * 1) * (0.25 + 0.75 * glowK.v);
     });
     // embers
     const n = 30, ep = new Float32Array(n * 3), life = new Float32Array(n);
@@ -235,8 +236,8 @@ export function createPlanet(scene, quality, rand, content) {
     if (!near(deg, 5)) {
       const k = kitAt(deg, -3.5 - rand() * 2);
       const h = 3 + rand() * 4;
-      if (rand() < 0.6) k.pine(0, 0, h, rand() < 0.5 ? '#0f2a28' : '#143430', '#120c14');
-      else k.roundTree(0, 0, h, '#14302c', '#120c14');
+      if (rand() < 0.6) k.pine(0, 0, h, rand() < 0.5 ? '#2a5a3a' : '#2f6a44', '#4a3020');
+      else k.roundTree(0, 0, h, '#3a7a4a', '#4a3020');
     }
     // mid: rocks, mushrooms, fence posts
     if (!near(deg, 4) && rand() < 0.5) {
@@ -251,17 +252,17 @@ export function createPlanet(scene, quality, rand, content) {
           cap.position.set(x, 0.4 * s, 0); k.add(cap);
         }
       } else if (r < 0.8) {
-        const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(0.35 + rand() * 0.5, 0), k.flat('#2e3050'));
+        const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(0.35 + rand() * 0.5, 0), k.flat('#6a6e80'));
         rock.position.y = 0.2; rock.castShadow = true; k.add(rock);
       } else {
-        for (let i = 0; i < 3; i++) k.box(0.12, 0.8, 0.12, k.flat('#2a1e18'), i * 0.6 - 0.6, 0.4, 0);
-        k.box(1.5, 0.08, 0.08, k.flat('#2a1e18'), 0, 0.6, 0);
+        for (let i = 0; i < 3; i++) k.box(0.12, 0.8, 0.12, k.flat('#5a4030'), i * 0.6 - 0.6, 0.4, 0);
+        k.box(1.5, 0.08, 0.08, k.flat('#5a4030'), 0, 0.6, 0);
       }
     }
     // front row: dark bushes (blurred by depth of field)
     if (rand() < 0.45) {
       const k = kitAt(deg + 0.7, 4.2 + rand() * 1.5);
-      const b = new THREE.Mesh(new THREE.IcosahedronGeometry(0.6 + rand() * 0.6, 0), k.flat('#0a1a18'));
+      const b = new THREE.Mesh(new THREE.IcosahedronGeometry(0.6 + rand() * 0.6, 0), k.flat('#2a4a30'));
       b.position.y = 0.25; k.add(b);
     }
   }
@@ -270,7 +271,7 @@ export function createPlanet(scene, quality, rand, content) {
   const tufts = quality.name === 'low' ? 700 : 2400;
   const blade = new THREE.ConeGeometry(0.07, 0.5, 3);
   blade.translate(0, 0.25, 0);
-  const grassInst = new THREE.InstancedMesh(blade, new THREE.MeshStandardMaterial({ color: '#235a46', roughness: 1, flatShading: true }), tufts);
+  const grassInst = new THREE.InstancedMesh(blade, new THREE.MeshStandardMaterial({ color: '#3f8a4a', roughness: 1, flatShading: true }), tufts);
   const dummy = new THREE.Object3D();
   for (let i = 0; i < tufts; i++) {
     const a = rand() * Math.PI * 2, z = (rand() - 0.5) * (DEPTH - 0.6);
@@ -300,6 +301,15 @@ export function createPlanet(scene, quality, rand, content) {
   for (const k of kits) animated.push(...k.animated);
   const tmp = new THREE.Vector3();
 
+  // everything that glows gets dimmer in daylight
+  const emissives = [], lights = [];
+  planet.traverse((o) => {
+    if (o.isPointLight) { if (o.color.getHex() !== new THREE.Color('#ff8a3a').getHex()) lights.push({ l: o, base: o.intensity }); return; }
+    for (const m of [].concat(o.material || [])) {
+      if (m.emissive && m.emissiveIntensity > 0 && m.emissive.getHex() !== 0 && !emissives.some((e) => e.m === m)) emissives.push({ m, base: m.emissiveIntensity });
+    }
+  });
+
   return {
     group: planet,
     stations,
@@ -314,10 +324,16 @@ export function createPlanet(scene, quality, rand, content) {
       return best;
     },
     anchorWorld(s) { return s.holder.localToWorld(tmp.copy(s.anchor)); },
+    /** n: 0 = day, 1 = night */
+    setNight(n) {
+      glowK.v = n;
+      for (const e of emissives) e.m.emissiveIntensity = e.base * (0.3 + 0.7 * n);
+      for (const l of lights) l.l.intensity = l.base * (0.12 + 0.88 * n);
+    },
     update(t, dt) {
       for (const a of animated) a(t);
       for (const s of sprites) s.update(dt);
-      flowerMat.opacity = 0.75 + 0.25 * Math.sin(t * 2);
+      flowerMat.opacity = (0.75 + 0.25 * Math.sin(t * 2)) * (0.35 + 0.65 * glowK.v);
     },
   };
 }

@@ -110,6 +110,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .skill small { grid-column: 2; color: var(--muted); font-size: 18px; }
 .section-label { position: absolute; top: 28px; left: 50%; transform: translateX(-50%); font-family: var(--px); font-size: 11px;
   color: var(--yellow); text-shadow: 0 0 10px color-mix(in srgb, var(--yellow) 60%, transparent), 2px 2px 0 #000; white-space: nowrap; }
+.clock { font-size: 9px; color: var(--yellow); }
 .ring-panel { padding: 8px; color: var(--cyan); }
 .setting-label { font-family: var(--px); font-size: 9px; color: var(--muted); }
 .envs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }

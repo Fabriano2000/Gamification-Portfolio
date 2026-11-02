@@ -150,6 +150,10 @@ export function openContact(c) {
 }
 
 // ---------- HUD: section label + ring minimap of the planet
+export function setClock(text) {
+  const el = $('#clock');
+  if (el && el.textContent !== text) el.textContent = text;
+}
 export function setSection(text) {
   const el = $('#section');
   if (el.textContent !== text) el.textContent = text;

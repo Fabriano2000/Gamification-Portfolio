@@ -23,7 +23,7 @@ function squareTexture() {
 
 export function createParticles(group, kind, count) {
   const k = KINDS[kind];
-  if (!k || count <= 0) return { update() {} };
+  if (!k || count <= 0) return { update() {}, setStrength() {} };
   return kind === 'rain' ? rain(group, k, count) : motes(group, k, count);
 }
 
@@ -43,6 +43,7 @@ function rain(group, k, count) {
   lines.frustumCulled = false;
   group.add(lines);
   return {
+    setStrength(v) { lines.visible = v > 0.02; lines.material.opacity = k.opacity * v; },
     update(dt, centerX) {
       lines.position.x = centerX;
       for (let i = 0; i < count; i++) {
@@ -79,10 +80,12 @@ function motes(group, k, count) {
   const pts = new THREE.Points(geo, mat);
   pts.frustumCulled = false;
   group.add(pts);
-  let t = 0;
+  let t = 0, strength = 1;
   return {
+    setStrength(v) { strength = v; pts.visible = v > 0.02; },
     update(dt, centerX) {
       t += dt;
+      if (!pts.visible) return;
       pts.position.x = centerX;
       for (let i = 0; i < count; i++) {
         const o = i * 3;
@@ -92,7 +95,7 @@ function motes(group, k, count) {
         if (pos[o + 1] < 0) pos[o + 1] = yMax;
         if (pos[o + 1] > yMax) pos[o + 1] = 0;
       }
-      if (k.pulse) mat.opacity = 0.6 + 0.4 * Math.sin(t * 3);
+      mat.opacity = k.opacity * strength * (k.pulse ? 0.6 + 0.4 * Math.sin(t * 3) : 1);
       geo.attributes.position.needsUpdate = true;
     },
   };

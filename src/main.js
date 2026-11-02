@@ -5,6 +5,7 @@ import { content } from './content.js';
 import { createPlanet, R, wrap180 } from './planet/planet.js';
 import { createSky } from './planet/sky.js';
 import { createBackdrop } from './planet/backdrop.js';
+import { hourAt, sample, celestial, formatClock } from './planet/timeofday.js';
 import { createParticles } from './particles.js';
 import { PixelSprite } from './sprite.js';
 import { PLAYER_IDLE, PLAYER_WALK, rng } from './pixel.js';
@@ -60,8 +61,10 @@ async function boot() {
 
   // Lighting: the night sky is the light. Cool moonlight from behind-right rims everything,
   // a soft violet sky fill keeps shapes readable, warm points come from windows and fires.
-  scene.add(new THREE.HemisphereLight('#5a6ac0', '#0a0814', 1.0));
-  const moon = new THREE.DirectionalLight('#9fb8ff', 2.2);
+  // Colors/intensities below are overwritten every frame by the day/night cycle.
+  const hemi = new THREE.HemisphereLight('#5a6ac0', '#0a0814', 1.0);
+  scene.add(hemi);
+  const moon = new THREE.DirectionalLight('#9fb8ff', 2.2); // key light: the sun by day, the moon by night
   moon.position.set(22, 30, -24);
   moon.castShadow = quality.shadows > 0;
   if (moon.castShadow) {
@@ -79,6 +82,8 @@ async function boot() {
   const backdrop = createBackdrop(scene, rand);
   const planet = createPlanet(scene, quality, rand, content);
   const fireflies = createParticles(scene, 'fireflies', quality.name === 'low' ? 60 : 160);
+  const pollen = createParticles(scene, 'pollen', quality.name === 'low' ? 60 : 160);
+  const FILL_NIGHT = new THREE.Color('#6a5aff'), FILL_DAY = new THREE.Color('#fff4e8');
 
   // Player silhouette, fixed on the crown of the planet.
   const player = new PixelSprite({ frames: PLAYER_IDLE, scale: 1.6, fps: 4, glowChars: 'VW', glow: 1.4, recolor: SILHOUETTE });
@@ -209,6 +214,26 @@ async function boot() {
     backdrop.update(t, walked);
     planet.update(t, dt);
     fireflies.update(dt, 0);
+    pollen.update(dt, 0);
+
+    // ---------- day/night: one lap = one day, starting at dawn
+    const hour = hourAt(rot);
+    const tod = sample(hour);
+    sky.setTime(tod);
+    backdrop.setTime(tod);
+    planet.setNight(tod.night);
+    hemi.color.copy(tod.hemiSky); hemi.groundColor.copy(tod.hemiGround); hemi.intensity = tod.hemi;
+    moon.color.copy(tod.key); moon.intensity = tod.keyI;
+    const { sun: sf, moon: mf } = celestial(hour);
+    const arc = sf ?? mf ?? 0.5;
+    moon.position.set(-40 + arc * 80, 10 + Math.sin(Math.PI * arc) * 30, -24); // always behind the planet: rim light
+    front.color.copy(FILL_NIGHT).lerp(FILL_DAY, 1 - tod.night); front.intensity = 0.25 + 0.35 * (1 - tod.night);
+    scene.fog.color.copy(tod.fog);
+    scene.background.copy(tod.top);
+    post.applyTheme({ bloom: tod.bloom, threshold: tod.thr, vignette: 0.5 + 0.12 * tod.night, chroma: true });
+    fireflies.setStrength(tod.night);
+    pollen.setStrength(1 - tod.night);
+    ui.setClock(`${tod.name} · ${formatClock(hour)}`);
     ui.setRing(rot);
 
     // nearest stop → card / prompt / section label
