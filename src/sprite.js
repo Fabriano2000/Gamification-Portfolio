@@ -1,6 +1,6 @@
 // Billboard pixel sprite: a lit plane with a sprite-sheet texture, crisp pixels and cut-out shadows.
 import * as THREE from 'three';
-import { sheetTexture } from './pixel.js';
+import { sheetTexture, glowRecolor } from './pixel.js';
 
 export const PX = 0.1; // world units per art pixel
 
@@ -12,11 +12,13 @@ export class PixelSprite {
    * @param {number} [opts.fps]        animation speed
    * @param {string} [opts.glowChars]  palette chars that should glow (emissive)
    * @param {number} [opts.glow]       emissive intensity
+   * @param {object} [opts.recolor]    palette overrides {char: '#hex'}
    */
-  constructor({ frames, scale = 1, fps = 4, glowChars = '', glow = 2 }) {
+  constructor({ frames, scale = 1, fps = 4, glowChars = '', glow = 2, recolor = null }) {
     this.sheets = {};
     this.fps = fps;
     this.time = 0;
+    this.recolor = recolor;
     const main = this.addSheet('default', frames, glowChars);
     this.current = 'default';
 
@@ -48,13 +50,8 @@ export class PixelSprite {
   }
 
   addSheet(name, frames, glowChars = '') {
-    const sheet = sheetTexture(frames);
-    if (glowChars) {
-      // Emissive map: only the glowing palette entries stay lit, the rest goes black.
-      const recolor = {};
-      for (const c of 'KHhSVvJjPBWGgYMRDdLOoEnm') if (!glowChars.includes(c)) recolor[c] = '#000000';
-      sheet.emissive = sheetTexture(frames, recolor).texture;
-    }
+    const sheet = sheetTexture(frames, this.recolor);
+    if (glowChars) sheet.emissive = sheetTexture(frames, glowRecolor(glowChars, this.recolor || {})).texture;
     this.sheets[name] = sheet;
     return sheet;
   }
@@ -77,5 +74,12 @@ export class PixelSprite {
     const frame = Math.floor(this.time * this.fps) % s.frames;
     s.texture.offset.x = frame / s.frames;
     if (s.emissive) s.emissive.offset.x = frame / s.frames;
+  }
+
+  dispose() {
+    for (const s of Object.values(this.sheets)) { s.texture.dispose(); s.emissive?.dispose(); }
+    this.mesh.geometry.dispose();
+    this.material.dispose();
+    this.mesh.customDepthMaterial.dispose();
   }
 }

@@ -6,11 +6,12 @@ const SPEED = 4.2;
 const ACCEL = 18;
 
 export class Player {
-  constructor(scene) {
-    this.sprite = new PixelSprite({ frames: PLAYER_IDLE, scale: 1.25, fps: 4, glowChars: 'V', glow: 1.6 });
+  constructor(scene, recolor = null, x = -10) {
+    this.scene = scene;
+    this.sprite = new PixelSprite({ frames: PLAYER_IDLE, scale: 1.25, fps: 4, glowChars: 'V', glow: 1.6, recolor });
     this.sprite.addSheet('walk', PLAYER_WALK, 'V');
     this.mesh = this.sprite.mesh;
-    this.mesh.position.set(-10, 0, 0);
+    this.mesh.position.set(x, 0, 0);
     scene.add(this.mesh);
     this.vx = 0;
     this.facing = 1;
@@ -19,6 +20,11 @@ export class Player {
   }
 
   get x() { return this.mesh.position.x; }
+
+  dispose() {
+    this.scene.remove(this.mesh);
+    this.sprite.dispose();
+  }
 
   update(dt) {
     let dir = 0;

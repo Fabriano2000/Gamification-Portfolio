@@ -58,12 +58,12 @@ export function questCardHTML(p, i) {
     <div class="foot">[E] OPEN · REWARD ${esc(p.reward)}</div>`;
 }
 
-export function showCard(project, index, x, y) {
+export function showCard(project, index, x, y, color) {
   const card = $('#card');
   if (card.dataset.index !== String(index)) {
     card.innerHTML = questCardHTML(project, index);
     card.dataset.index = index;
-    card.style.setProperty('--c', COLORS[index % COLORS.length]);
+    card.style.setProperty('--c', color || COLORS[index % COLORS.length]);
   }
   card.hidden = false;
   card.style.left = `${x}px`;
@@ -96,13 +96,14 @@ export function closeOverlay(sel) {
 }
 export const anyOverlayOpen = () => ['#modal', '#quick', '#menu'].some((s) => !$(s).hidden);
 
-export function openProject(p, i) {
+export function openProject(p, i, colors = COLORS) {
+  const c = colors[i % colors.length];
   openOverlay('#modal', `
-    <div class="q" style="--c:${COLORS[i % 3]}">${esc(p.quest)} · REWARD ${esc(p.reward)}</div>
+    <div class="q" style="--c:${c}">${esc(p.quest)} · REWARD ${esc(p.reward)}</div>
     <h2 id="modal-title">${esc(p.title)}</h2>
     <p>${esc(p.summary)}</p>
     <p>${esc(p.details)}</p>
-    <div class="tags" style="--c:${COLORS[i % 3]}">${p.tags.map((t) => `<span>${esc(t)}</span>`).join('')}</div>
+    <div class="tags" style="--c:${c}">${p.tags.map((t) => `<span>${esc(t)}</span>`).join('')}</div>
     <div class="links">${p.links.map((l) => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join('')}</div>`);
 }
 
@@ -123,9 +124,31 @@ export function openQuick(c) {
     <div class="links">${c.contact.map((l) => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join('')}</div>`);
 }
 
-export function openMenu(current) {
-  document.querySelectorAll('.quality button').forEach((b) => b.classList.toggle('on', b.dataset.q === current));
+export function markMenu(quality, env) {
+  document.querySelectorAll('.quality button').forEach((b) => b.classList.toggle('on', b.dataset.q === quality));
+  document.querySelectorAll('.envs button').forEach((b) => {
+    const on = b.dataset.env === env;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on);
+  });
+}
+export function openMenu(quality, env) {
+  markMenu(quality, env);
   openOverlay('#menu');
+}
+
+/** Environment picker buttons (one per theme). */
+export function buildEnvMenu(themes) {
+  $('.envs').innerHTML = themes.map((t) => `<button data-env="${t.id}" aria-pressed="false">${esc(t.label)}</button>`).join('');
+}
+
+/** UI colors + labels follow the environment. */
+export function applyTheme(theme) {
+  const root = document.documentElement;
+  for (const [k, v] of Object.entries(theme.ui)) root.style.setProperty(`--${k}`, v);
+  root.dataset.env = theme.id;
+  $('#zone-name').textContent = theme.zone;
+  $('#dialog .speaker').textContent = theme.npc.name;
 }
 
 export function setShards(n, total) {

@@ -4,11 +4,6 @@ export const content = {
   role: 'DEVELOPER',
   level: 24,
   tagline: 'I build things for the web.',
-  intro: [
-    "Welcome to Neo-Portfolio City, traveler.",
-    "This is the Quest Board. Each terminal holds one of YOUR NAME's projects.",
-    'Walk with A/D or the arrow keys. Press E near anything that glows.',
-  ],
   about:
     'Short bio goes here: who you are, what you love building, and what you are looking for next.',
   skills: [

@@ -7,7 +7,7 @@
     <meta name="description" content="Interactive HD-2D pixel RPG portfolio. Walk the neon city to explore projects, skills and contact info." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
@@ -22,6 +22,7 @@
         <div class="menu">
           <button class="px-btn primary" id="btn-start">▶ START GAME</button>
           <button class="px-btn ghost" id="btn-quick">&gt; QUICK VIEW</button>
+          <button class="px-btn ghost" id="btn-settings">* SETTINGS</button>
         </div>
         <p class="hint">Recruiter? Quick View skips the game -&gt; plain portfolio.</p>
       </div>
@@ -38,7 +39,7 @@
         <div class="small">SHARDS x <span id="shards">00</span></div>
       </div>
       <div class="hud-panel right">
-        <div>ZONE 03/05 · QUEST BOARD</div>
+        <div>ZONE 03/05 · <span id="zone-name">QUEST BOARD</span></div>
         <div class="minimap"><i></i><i></i><i class="on"></i><i></i><i></i></div>
         <div class="small">ESC MENU · Q QUICK VIEW</div>
       </div>
@@ -73,10 +74,12 @@
 
     <!-- Pause menu -->
     <div id="menu" class="overlay" hidden role="dialog" aria-modal="true" aria-label="Menu">
-      <article class="panel small-panel">
-        <h2>PAUSED</h2>
+      <article class="panel small-panel" aria-labelledby="menu-title">
+        <h2 id="menu-title">SETTINGS</h2>
         <button class="px-btn primary" data-act="resume">▶ RESUME</button>
         <button class="px-btn ghost" data-act="quick">&gt; QUICK VIEW</button>
+        <div class="setting-label">ENVIRONMENT</div>
+        <div class="envs" role="group" aria-label="Environment"></div>
         <div class="quality">
           <span>GRAPHICS</span>
           <button data-q="low">LOW</button><button data-q="medium">MED</button><button data-q="high">HIGH</button>
